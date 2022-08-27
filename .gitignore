@@ -16,6 +16,7 @@ coverage
 coverage.json
 typechain
 typechain-types
+CoinEx-hackathon-project
 
 #Hardhat files
 cache

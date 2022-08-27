@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.0;
 
-contract socialContract {
-
+contract SocialContract {
     //variables
     address public deployer;
 
     // mapping for an address to the ipfs hash of his profile
-    mapping (address => string) profileHash;
+    mapping(address => string) profileHash;
 
     // a struct of a post
     struct post {
@@ -31,10 +30,10 @@ contract socialContract {
     post[] public allPosts;
 
     // a mapping of an address to its posts
-    mapping (address => post[]) userPosts;
+    mapping(address => post[]) userPosts;
 
     // a mapping of a users liked posts
-    mapping (address => post[]) userLikedPost;
+    mapping(address => post[]) userLikedPost;
 
     constructor() {
         deployer = msg.sender;
@@ -42,7 +41,6 @@ contract socialContract {
     }
 
     // functions
-
     function makePost(string memory _postHash) public {
         // instantiating a post instance
         post memory p;
@@ -70,11 +68,11 @@ contract socialContract {
         _post.postHash = "deleted";
     }
 
-    function getAllPosts() public view returns(post[] memory) {
+    function getAllPosts() public view returns (post[] memory) {
         return allPosts;
     }
 
-    function getUserPosts(address user) public view returns(post[] memory p) {
+    function getUserPosts(address user) public view returns (post[] memory p) {
         p = userPosts[user];
         return p;
     }
