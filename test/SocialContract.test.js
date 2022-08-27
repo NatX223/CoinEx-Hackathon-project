@@ -14,7 +14,11 @@ describe("Unit Testing of SocialMediaContract", function () {
     const postHash = "0x000000000000";
     const postId = 1;
 
+<<<<<<< HEAD
     await socialContract.createPost(postHash); //Creating First Post
+=======
+    await socialContract.createPost(postHash.toString()); //Creating First Post
+>>>>>>> 0b802425a0ac361ae3ed7f075250ad3740dfdcbb
 
     return { socialContract, owner, otherAccount, postHash, postId };
   }
@@ -28,13 +32,21 @@ describe("Unit Testing of SocialMediaContract", function () {
       const { socialContract } = await loadFixture(LoadFixture);
       const hash = "";
       await expect(
+<<<<<<< HEAD
         socialContract.createPost(hash)
+=======
+        socialContract.createPost(hash.toString())
+>>>>>>> 0b802425a0ac361ae3ed7f075250ad3740dfdcbb
       ).to.be.revertedWith("PostHash Not Found");
     });
     it("Should emit event PostCreated", async function () {
       const { socialContract, postHash } = await loadFixture(LoadFixture);
 
+<<<<<<< HEAD
       await expect(socialContract.createPost(postHash)).to.emit(
+=======
+      await expect(socialContract.createPost(postHash.toString())).to.emit(
+>>>>>>> 0b802425a0ac361ae3ed7f075250ad3740dfdcbb
         socialContract,
         "PostCreated"
       );
@@ -44,28 +56,49 @@ describe("Unit Testing of SocialMediaContract", function () {
   describe("Checking likePost Function", function () {
     it("First Post's Like counter should be equal to 0", async function () {
       const { socialContract, postId } = await loadFixture(LoadFixture);
+<<<<<<< HEAD
       expect(await socialContract.getLikeCount(postId)).to.equal(0);
     });
     it("First Post's Like counter should be equal to 1 After likePost", async function () {
       const { socialContract, postId } = await loadFixture(LoadFixture);
       await socialContract.likePost(postId);
       expect(await socialContract.getLikeCount(postId)).to.equal(1);
+=======
+      expect(await socialContract.getLikeCount(postId.toString())).to.equal(0);
+    });
+    it("First Post's Like counter should be equal to 1 After likePost", async function () {
+      const { socialContract, postId } = await loadFixture(LoadFixture);
+      await socialContract.likePost(postId.toString());
+      expect(await socialContract.getLikeCount(postId.toString())).to.equal(1);
+>>>>>>> 0b802425a0ac361ae3ed7f075250ad3740dfdcbb
     });
     it("Like with other Account(Counter should be 2 now)", async function () {
       const { socialContract, postId, otherAccount } = await loadFixture(
         LoadFixture
       );
+<<<<<<< HEAD
       await socialContract.likePost(postId);
       await socialContract.connect(otherAccount).likePost(postId);
       expect(await socialContract.getLikeCount(postId)).to.equal(2);
+=======
+      await socialContract.likePost(postId.toString());
+      await socialContract.connect(otherAccount).likePost(postId.toString());
+      expect(await socialContract.getLikeCount(postId.toString())).to.equal(2);
+>>>>>>> 0b802425a0ac361ae3ed7f075250ad3740dfdcbb
     });
     it("Should revert with error (User has Liked this Post Before)", async function () {
       const { socialContract, postId, otherAccount } = await loadFixture(
         LoadFixture
       );
+<<<<<<< HEAD
       await socialContract.connect(otherAccount).likePost(postId);
       await expect(
         socialContract.connect(otherAccount).likePost(postId)
+=======
+      await socialContract.connect(otherAccount).likePost(postId.toString());
+      await expect(
+        socialContract.connect(otherAccount).likePost(postId.toString())
+>>>>>>> 0b802425a0ac361ae3ed7f075250ad3740dfdcbb
       ).to.be.revertedWith("User has Liked this Post Before");
     });
   });
@@ -75,7 +108,11 @@ describe("Unit Testing of SocialMediaContract", function () {
       const { socialContract, otherAccount } = await loadFixture(LoadFixture);
       const hash = "0x000000002";
       // Create Post with other account
+<<<<<<< HEAD
       await socialContract.connect(otherAccount).createPost(hash);
+=======
+      await socialContract.connect(otherAccount).createPost(hash.toString());
+>>>>>>> 0b802425a0ac361ae3ed7f075250ad3740dfdcbb
       posts = await socialContract.fetchPosts();
       posts = await Promise.all(
         posts.map(async (i) => {
@@ -94,6 +131,7 @@ describe("Unit Testing of SocialMediaContract", function () {
       console.log("posts: ", posts);
     });
   });
+<<<<<<< HEAD
 
   describe("check deletePost function", function () {
     it("should delete post without reverting", async function () {
@@ -140,4 +178,6 @@ describe("Unit Testing of SocialMediaContract", function () {
       ).to.be.revertedWith("User has DisLiked this Post Before");
     });
   });
+=======
+>>>>>>> 0b802425a0ac361ae3ed7f075250ad3740dfdcbb
 });
