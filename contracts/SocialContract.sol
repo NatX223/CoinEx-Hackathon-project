@@ -206,9 +206,6 @@ contract SocialMediaContract is ERC20 {
     function getLikeCount(uint _id) public view returns (uint) {
         return idToPost[_id].likes;
     }
+    
 
-    function contractBalance() public view returns (uint) {
-        uint balance = balanceOf(address(this));
-        return balance;
-    }
 }
