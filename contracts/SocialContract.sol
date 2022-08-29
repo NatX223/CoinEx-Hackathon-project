@@ -20,6 +20,7 @@ contract SocialMediaContract is ERC20 {
         uint likes; // Post Likes
         uint postedAt; // TimeStamp
         uint tipAmount; // Amount of TOKENS tipped to Author
+        string commentsHash; // IPFS hash for the comments
     }
 
     event PostCreated(
@@ -36,9 +37,17 @@ contract SocialMediaContract is ERC20 {
     mapping(uint256 => Post) private idToPost;
     mapping(address => mapping(uint => bool)) private liked; // mapping for user if he/she has liked the post or not
 
-    constructor(uint initialSupply) ERC20("TOKENS", "TKM") {
+    // the specified amount of tokens to be rewarded to a user for making an interaction
+    uint postReward;
+    uint likeReward;
+    uint commentReward;
+
+    constructor(uint initialSupply, uint _postReward, uint _likeReward,  uint _commentReward) ERC20("SOCIAL", "SOC") {
         owner = payable(msg.sender);
-        _mint(msg.sender, initialSupply);
+        _mint(owner, initialSupply);
+        postReward = _postReward;
+        likeReward = _likeReward;
+        commentReward = _commentReward;
     }
 
     // Creates a Post
@@ -50,7 +59,8 @@ contract SocialMediaContract is ERC20 {
         uint likes = 0; // Likes initialized to zero
         uint postedAt = block.timestamp; // Post Timestamp
         bool deleted = false; // Post Status default false
-        uint tipAmount = 0; // tipAmount initialized to zero
+        uint tipAmount = 1; // tipAmount initialized to zero
+        string memory comments = " ";
 
         idToPost[newPostId] = Post(
             newPostId,
@@ -59,10 +69,16 @@ contract SocialMediaContract is ERC20 {
             deleted,
             likes,
             postedAt,
-            tipAmount
+            tipAmount,
+            comments
         );
 
         liked[msg.sender][newPostId] = false;
+
+        uint decimals = decimals();
+        uint reward = postReward * (10 ** decimals);
+
+        _mint(msg.sender, reward);
 
         emit PostCreated(
             newPostId,
@@ -107,6 +123,24 @@ contract SocialMediaContract is ERC20 {
         liked[msg.sender][_id] = true;
         uint postLikes = idToPost[_id].likes;
         idToPost[_id].likes = postLikes + 1;
+
+        uint decimals = decimals();
+        uint reward = likeReward * (10 ** decimals);
+
+        _mint(msg.sender, reward);
+    }
+
+    // function to comment on post
+    function commentPost(uint id, string memory newHash) public {
+        uint postCount = getPostCount();
+        require(id <= postCount, "The post does not exist");
+
+        idToPost[id].commentsHash = newHash;
+
+        uint decimals = decimals();
+        uint reward = commentReward * (10 ** decimals);
+
+        _mint(msg.sender, reward);
     }
 
     // Dislike Post
@@ -127,7 +161,18 @@ contract SocialMediaContract is ERC20 {
         idToPost[_id].posthash = _hash;
     }
 
-    // function tipPost() public payable {}
+    // function to tip a post
+    function tipPost(uint id) public {
+        uint postCount = getPostCount();
+        require(id <= postCount, "The post does not exist");
+
+        address author = idToPost[id].author;
+        uint tip = idToPost[id].tipAmount;
+        uint decimals = decimals();
+        uint amount = tip * (10 ** decimals);
+
+        transfer(author, amount);
+    }
 
     // Return all posts of msg.sender
     function fetchMyPosts() public view returns (Post[] memory) {
@@ -160,5 +205,10 @@ contract SocialMediaContract is ERC20 {
 
     function getLikeCount(uint _id) public view returns (uint) {
         return idToPost[_id].likes;
+    }
+
+    function contractBalance() public view returns (uint) {
+        uint balance = balanceOf(address(this));
+        return balance;
     }
 }

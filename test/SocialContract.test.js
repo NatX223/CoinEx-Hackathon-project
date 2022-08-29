@@ -10,7 +10,7 @@ describe("Unit Testing of SocialMediaContract", function () {
     const [owner, otherAccount] = await ethers.getSigners();
 
     const Contract = await ethers.getContractFactory("SocialMediaContract");
-    const socialContract = await Contract.deploy(100000);
+    const socialContract = await Contract.deploy(100000, 5, 2, 1);
     const postHash = "0x000000000000";
     const postId = 1;
 
@@ -87,6 +87,7 @@ describe("Unit Testing of SocialMediaContract", function () {
             likes: i.likes.toString(),
             postedAt: i.postedAt.toString(),
             tipAmount: i.tipAmount.toString(),
+            commentsHash: i.commentsHash.toString()
           };
           return post;
         })
@@ -138,6 +139,31 @@ describe("Unit Testing of SocialMediaContract", function () {
       await expect(
         socialContract.dislikePost(postId)
       ).to.be.revertedWith("User has DisLiked this Post Before");
+    });
+  });
+
+  describe("check commentPost", function () {
+      it("should comment on post successfuly", async function () {
+        const { socialContract, otherAccount, postId } = await loadFixture(LoadFixture);
+        const newhash = "0x00000004";
+        await expect(socialContract.connect(otherAccount).commentPost(postId, newhash)).not.to.be.reverted;
+      });
+      it("should revert if the post does not exist", async function () {
+        const { socialContract, otherAccount } = await loadFixture(LoadFixture);
+        const id = 2;
+        const newhash = "0x00000004";
+        await expect(
+          socialContract.connect(otherAccount).commentPost(id, newhash)
+        ).to.be.revertedWith("The post does not exist");
+      });
+  });
+
+  describe("check tipPost", function () {
+    it("should tip post successfuly", async function () {
+      const { socialContract, otherAccount, postId } = await loadFixture(LoadFixture);
+      const posthash = "0x000005";
+      await socialContract.connect(otherAccount).createPost(posthash);
+      await expect(socialContract.connect(otherAccount).tipPost(postId)).not.to.be.reverted;
     });
   });
 });
