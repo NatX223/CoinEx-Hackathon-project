@@ -2,15 +2,22 @@
 pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/utils/Counters.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 // A Social Media platform where people can monetize their content
 
-contract SocialMediaContract is ERC20 {
+contract SocialMediaContract {
     // Variables
     using Counters for Counters.Counter; // OpenZepplin Counter
     Counters.Counter private _posts; // Counter For Posts
     address payable owner; // Contract Owner Address
+    uint totalreward; // the total amount of tokens that will be rewarded for contributing
+    uint rewardAccumalted = 0; // the rewards that have given
+    uint decimals; // the decimals of the token
+    // the specified amount of tokens to be rewarded to a user for making an interaction
+    uint postReward;
+    uint likeReward;
+    uint commentReward;
+    IToken token;
 
     struct Post {
         uint id;
@@ -37,23 +44,21 @@ contract SocialMediaContract is ERC20 {
     mapping(uint256 => Post) private idToPost;
     mapping(address => mapping(uint => bool)) private liked; // mapping for user if he/she has liked the post or not
 
-    // the specified amount of tokens to be rewarded to a user for making an interaction
-    uint postReward;
-    uint likeReward;
-    uint commentReward;
-
-    constructor(uint initialSupply, uint _postReward, uint _likeReward,  uint _commentReward) ERC20("SOCIAL", "SOC") {
-        owner = payable(msg.sender);
-        _mint(owner, initialSupply);
+    constructor(uint _postReward, uint _likeReward,  uint _commentReward, address tokenAddress) {
         postReward = _postReward;
         likeReward = _likeReward;
         commentReward = _commentReward;
+        token = IToken(tokenAddress);
+        totalreward = token.totalRewards();
+        decimals = token.decimals();
     }
 
     // Creates a Post
     function createPost(string memory _postHash) public {
         require(bytes(_postHash).length > 0, "PostHash Not Found");
+        uint remainingReward = totalreward - rewardAccumalted;
 
+        if (remainingReward >= postReward) {
         _posts.increment();
         uint256 newPostId = _posts.current(); // Post Counter Incremented
         uint likes = 0; // Likes initialized to zero
@@ -75,10 +80,10 @@ contract SocialMediaContract is ERC20 {
 
         liked[msg.sender][newPostId] = false;
 
-        uint decimals = decimals();
-        uint reward = postReward * (10 ** decimals);
+        uint amount = postReward * (10 ** decimals);
+        token.transfer(msg.sender, amount);
 
-        _mint(msg.sender, reward);
+        rewardAccumalted = rewardAccumalted + postReward;
 
         emit PostCreated(
             newPostId,
@@ -89,6 +94,38 @@ contract SocialMediaContract is ERC20 {
             postedAt,
             tipAmount
         );
+        } else {
+        _posts.increment();
+        uint256 newPostId = _posts.current(); // Post Counter Incremented
+        uint likes = 0; // Likes initialized to zero
+        uint postedAt = block.timestamp; // Post Timestamp
+        bool deleted = false; // Post Status default false
+        uint tipAmount = 1; // tipAmount initialized to zero
+        string memory comments = " ";
+
+        idToPost[newPostId] = Post(
+            newPostId,
+            _postHash,
+            payable(msg.sender),
+            deleted,
+            likes,
+            postedAt,
+            tipAmount,
+            comments
+        );
+
+        liked[msg.sender][newPostId] = false;
+
+        emit PostCreated(
+            newPostId,
+            _postHash,
+            payable(msg.sender),
+            deleted,
+            likes,
+            postedAt,
+            tipAmount
+        );
+        }
     }
 
     // Return all posts stored in mapping
@@ -120,27 +157,38 @@ contract SocialMediaContract is ERC20 {
     function likePost(uint _id) public {
         bool likeStatus = liked[msg.sender][_id];
         require(likeStatus == false, "User has Liked this Post Before");
+        uint remainingReward = totalreward - rewardAccumalted;
+        if (remainingReward >= postReward) {
         liked[msg.sender][_id] = true;
         uint postLikes = idToPost[_id].likes;
         idToPost[_id].likes = postLikes + 1;
 
-        uint decimals = decimals();
-        uint reward = likeReward * (10 ** decimals);
+        uint amount = likeReward * (10 ** decimals);
+        token.transfer(msg.sender, amount);
 
-        _mint(msg.sender, reward);
+        rewardAccumalted = rewardAccumalted +likeReward;      
+        } else {
+        liked[msg.sender][_id] = true;
+        uint postLikes = idToPost[_id].likes;
+        idToPost[_id].likes = postLikes + 1;
+        }
     }
 
     // function to comment on post
     function commentPost(uint id, string memory newHash) public {
         uint postCount = getPostCount();
+        uint remainingReward = totalreward - rewardAccumalted;
         require(id <= postCount, "The post does not exist");
+        if (remainingReward >= commentReward) {
+            idToPost[id].commentsHash = newHash;
+            uint amount = postReward * (10 ** decimals);
+            token.transfer(msg.sender, amount);
 
-        idToPost[id].commentsHash = newHash;
+            rewardAccumalted = rewardAccumalted + postReward;
+        } else {
+            idToPost[id].commentsHash = newHash;
+        }
 
-        uint decimals = decimals();
-        uint reward = commentReward * (10 ** decimals);
-
-        _mint(msg.sender, reward);
     }
 
     // Dislike Post
@@ -168,10 +216,9 @@ contract SocialMediaContract is ERC20 {
 
         address author = idToPost[id].author;
         uint tip = idToPost[id].tipAmount;
-        uint decimals = decimals();
         uint amount = tip * (10 ** decimals);
-
-        transfer(author, amount);
+        token.transferFrom(msg.sender, author, amount);
+        
     }
 
     // Return all posts of msg.sender
@@ -207,5 +254,19 @@ contract SocialMediaContract is ERC20 {
         return idToPost[_id].likes;
     }
     
+}
 
+interface IToken {
+    
+    function maximumSupply() external returns (uint);
+
+    function totalRewards() external returns (uint);
+
+    function balanceOf(address account) external view returns (uint256);
+
+    function transfer(address to, uint256 amount) external returns (bool);
+
+    function transferFrom(address from, address to, uint256 amount) external returns (bool);
+
+    function decimals() external returns (uint);
 }
