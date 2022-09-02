@@ -6,17 +6,23 @@ describe("Unit Testing of SocialMediaContract", function () {
   // We define a fixture to reuse the same setup in every test.
   // We use loadFixture to run this setup once, snapshot that state,
   // and reset Hardhat Network to that snapshot in every test.
+
   async function LoadFixture() {
     const [owner, otherAccount] = await ethers.getSigners();
 
+    const Token = await ethers.getContractFactory("SocialToken");
+    const token = await Token.deploy(1000000, owner.address);
+
     const Contract = await ethers.getContractFactory("SocialMediaContract");
-    const socialContract = await Contract.deploy(100000, 5, 2, 1);
+    const socialContract = await Contract.deploy(5, 1, 2, token.address);
     const postHash = "0x000000000000";
     const postId = 1;
+    const contractAddress = socialContract.address;
 
+    await token.transfer(contractAddress, 50000000000000000000000n);
     await socialContract.createPost(postHash); //Creating First Post
 
-    return { socialContract, owner, otherAccount, postHash, postId };
+    return { socialContract, token, owner, otherAccount, postHash, postId };
   }
 
   describe("Checking createPost Function", function () {
@@ -160,9 +166,10 @@ describe("Unit Testing of SocialMediaContract", function () {
 
   describe("check tipPost", function () {
     it("should tip post successfuly", async function () {
-      const { socialContract, otherAccount, postId } = await loadFixture(LoadFixture);
+      const { socialContract, otherAccount, postId, owner, token } = await loadFixture(LoadFixture);
       const posthash = "0x000005";
       await socialContract.connect(otherAccount).createPost(posthash);
+      await token.connect(otherAccount).approve(socialContract.address, 2000000000000000000n)
       await expect(socialContract.connect(otherAccount).tipPost(postId)).not.to.be.reverted;
     });
   });
