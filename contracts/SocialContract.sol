@@ -26,7 +26,6 @@ contract SocialMediaContract {
         bool deleted; // Delete Status
         uint likes; // Post Likes
         uint postedAt; // TimeStamp
-        uint tipAmount; // Amount of TOKENS tipped to Author
         string commentsHash; // IPFS hash for the comments
     }
 
@@ -36,8 +35,7 @@ contract SocialMediaContract {
         address payable author,
         bool deleted,
         uint likes,
-        uint postedAt,
-        uint tipAmount
+        uint postedAt
     );
 
     // Mappings
@@ -64,7 +62,6 @@ contract SocialMediaContract {
         uint likes = 0; // Likes initialized to zero
         uint postedAt = block.timestamp; // Post Timestamp
         bool deleted = false; // Post Status default false
-        uint tipAmount = 1; // tipAmount initialized to zero
         string memory comments = " ";
 
         idToPost[newPostId] = Post(
@@ -74,7 +71,6 @@ contract SocialMediaContract {
             deleted,
             likes,
             postedAt,
-            tipAmount,
             comments
         );
 
@@ -91,8 +87,7 @@ contract SocialMediaContract {
             payable(msg.sender),
             deleted,
             likes,
-            postedAt,
-            tipAmount
+            postedAt
         );
         } else {
         _posts.increment();
@@ -100,7 +95,6 @@ contract SocialMediaContract {
         uint likes = 0; // Likes initialized to zero
         uint postedAt = block.timestamp; // Post Timestamp
         bool deleted = false; // Post Status default false
-        uint tipAmount = 1; // tipAmount initialized to zero
         string memory comments = " ";
 
         idToPost[newPostId] = Post(
@@ -110,7 +104,6 @@ contract SocialMediaContract {
             deleted,
             likes,
             postedAt,
-            tipAmount,
             comments
         );
 
@@ -122,8 +115,7 @@ contract SocialMediaContract {
             payable(msg.sender),
             deleted,
             likes,
-            postedAt,
-            tipAmount
+            postedAt
         );
         }
     }
@@ -210,15 +202,13 @@ contract SocialMediaContract {
     }
 
     // function to tip a post
-    function tipPost(uint id) public {
+    function tipPost(uint id, uint tip) public {
         uint postCount = getPostCount();
         require(id <= postCount, "The post does not exist");
 
         address author = idToPost[id].author;
-        uint tip = idToPost[id].tipAmount;
         uint amount = tip * (10 ** decimals);
         token.transferFrom(msg.sender, author, amount);
-        
     }
 
     // Return all posts of msg.sender

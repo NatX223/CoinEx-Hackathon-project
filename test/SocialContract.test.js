@@ -25,6 +25,7 @@ describe("Unit Testing of SocialMediaContract", function () {
     return { socialContract, token, owner, otherAccount, postHash, postId };
   }
 
+
   describe("Checking createPost Function", function () {
     it("Check counter is equal to 1", async function () {
       const { socialContract } = await loadFixture(LoadFixture);
@@ -169,8 +170,9 @@ describe("Unit Testing of SocialMediaContract", function () {
       const { socialContract, otherAccount, postId, owner, token } = await loadFixture(LoadFixture);
       const posthash = "0x000005";
       await socialContract.connect(otherAccount).createPost(posthash);
-      await token.connect(otherAccount).approve(socialContract.address, 2000000000000000000n)
-      await expect(socialContract.connect(otherAccount).tipPost(postId)).not.to.be.reverted;
+      await token.connect(otherAccount).approve(socialContract.address, 2000000000000000000n);
+      await socialContract.connect(otherAccount).tipPost(postId);
+      expect(await token.balanceOf(otherAccount.address)).to.equal(4000000000000000000n);
     });
   });
 });
